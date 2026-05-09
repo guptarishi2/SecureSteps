@@ -7,7 +7,7 @@ async function createCall(numbers) {
     await client.calls.create({
       from: "+12565874362",
       to: number,
-    twiml: "<Response><Say>Teri Maa ki chut</Say></Response>",
+    twiml: "<Response><Say>Hi</Say></Response>",
   })
   .then((call)=>console.log(call.sid))
   })
