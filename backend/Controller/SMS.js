@@ -5,7 +5,7 @@ const client = twilio(accountSid, authToken);
 async function createMessage(numbers) {
   numbers.forEach(async(number)=>{
     await client.messages.create({
-      body: "hi boys",
+      body: "hi",
       from: "+12565874362",
       to: number,
   })
