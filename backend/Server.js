@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const createMessage = require("./Controller/SMS");
 const createCall = require("./Controller/Call");
@@ -15,7 +16,7 @@ app.use(cors({
     origin:"http://localhost:3000"
     }))
 
-app.use(cookiParser("26020451202"))
+app.use(cookiParser(process.env.JWT_SECRET))
 
 
 /*app.post("/post-coordinates"  , async(req , res)=>{
