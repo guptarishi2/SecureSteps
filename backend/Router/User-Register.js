@@ -1,3 +1,4 @@
+// require("dotenv").config();
 const Router = require("express");
 const UserModel = require("../Model/UserSchema");
 const { body, validationResult } = require('express-validator');
@@ -19,12 +20,12 @@ USerRouter.post("/user-register" , [
         return res.status(501).json("user already exist please login");
     }
     const newUser = await UserModel.create({name, mobilenumber: `+91${mobilenumber}`});
-    res.clearCookie("token" , "26020451202" , {path : "/" , domain : "localhost" , httpOnly: true , signed: true} )
+    res.clearCookie("token" , process.env.JWT_SECRET , {path : "/" , domain : "localhost" , httpOnly: true , signed: true} )
     const expires = new Date()
     expires.setDate(expires.getDate() + 7)
     const payload = {newUser};
-    const token = jwt.sign({payload} , "26020451202");
-    res.cookie("token" , token , "26020451202" , {path : "/" , domain : "localhost" , httpOnly: true , signed: true})
+    const token = jwt.sign({payload} , process.env.JWT_SECRET);
+    res.cookie("token" , token , process.env.JWT_SECRET , {path : "/" , domain : "localhost" , httpOnly: true , signed: true})
     res.status(200).json(newUser);
     }
     catch(e){
