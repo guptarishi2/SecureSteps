@@ -13,7 +13,7 @@ const app = express();
 app.use(express.json());
 app.use(cors({
     credentials:true,
-    origin:"http://localhost:3000"
+    origin:"https://secure-steps-djqj.vercel.app/"
     }))
 
 app.use(cookiParser(process.env.JWT_SECRET))
