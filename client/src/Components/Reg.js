@@ -22,14 +22,17 @@ const navigate = useNavigate()
     e.preventDefault();  // Prevent the default form submission behavior
     try {
       if (checkbox) {
-        const resp = await fetch("http://localhost:1042/user/user-register", {
-          method: "POST",
-          credentials: "include",
-          body: JSON.stringify({ name, mobilenumber: phone, age }),
-          headers: {
-            "Content-Type": "application/json",  // Corrected headers
+        const resp = await fetch(
+          `${process.env.REACT_APP_BACKEND_URL}/user/user-register`,
+          {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify({ name, mobilenumber: phone, age }),
+            headers: {
+              "Content-Type": "application/json", // Corrected headers
+            },
           },
-        });
+        );
 
         if (resp.ok) {
           alert("User registration successful");
