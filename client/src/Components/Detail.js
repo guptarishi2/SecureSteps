@@ -43,13 +43,16 @@ export default function Detail() {
         e.preventDefault();
         try {
             if (checkbox) {
-                const response = await fetch('http://localhost:1042/user/user-detail', {
-                    method: 'POST',
+                const response = await fetch(
+                  `${process.env.REACT_APP_BACKEND_URL}/user/user-detail`,
+                  {
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json',
+                      "Content-Type": "application/json",
                     },
                     body: JSON.stringify(formData),
-                });
+                  },
+                );
                 if (response.ok) {
                     alert('User registration successful!');
                     // Reset form fields after successful submission
