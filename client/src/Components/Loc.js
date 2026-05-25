@@ -58,14 +58,17 @@ export default function Loc() {
   
     if (userPhone) {
       try {
-        const resp = await fetch("http://localhost:1042/user/post-location", {
-          method: "POST",
-          body: JSON.stringify({ userPhone }),  // Send userPhone in request body
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
+        const resp = await fetch(
+          `${process.env.REACT_APP_BACKEND_URL}/user/post-location`,
+          {
+            method: "POST",
+            body: JSON.stringify({ userPhone }), // Send userPhone in request body
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
           },
-        });
+        );
   
         if (resp.ok) {
           socket.emit("join-room", { room: userPhone });
