@@ -24,14 +24,17 @@ export default function Log() {
   const HandleSubmit = async (e) => {
     e.preventDefault();  // Prevent the default form submission behavior
     try {
-      const resp = await fetch("http://localhost:1042/user/user-login", {
-        method: "POST",
-        credentials: "include",
-        body: JSON.stringify({ name, mobilenumber: phone }),
-        headers: {
-          "Content-Type": "application/json",  // Set the content type
+      const resp = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/user/user-login`,
+        {
+          method: "POST",
+          credentials: "include",
+          body: JSON.stringify({ name, mobilenumber: phone }),
+          headers: {
+            "Content-Type": "application/json", // Set the content type
+          },
         },
-      });
+      );
 
       if (resp.ok) {
         alert("User login successful");
