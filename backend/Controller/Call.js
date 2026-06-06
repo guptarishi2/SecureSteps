@@ -2,7 +2,9 @@ const twilio = require("twilio");
 
 const accountSid = process.env.Sid;
 const authToken = process.env.auth_token;
-const fromNumber = process.env.TWILIO_FROM; // must be a number your Twilio account owns
+// Number your Twilio account owns. Defaults to the project's purchased number
+// and can be overridden with the TWILIO_FROM env var.
+const fromNumber = process.env.TWILIO_FROM || "+14788127071";
 const client = twilio(accountSid, authToken);
 
 const TWIML =
