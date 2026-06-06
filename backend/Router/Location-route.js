@@ -28,11 +28,17 @@ LocationRouter.post("/post-location", verifytoken, async (req, res) => {
     }
 
     // Emergency contacts (already stored in E.164 by the detail route).
+    // De-duplicate so a number listed in more than one field (e.g. the same
+    // person as father and guardian) only receives one alert.
     const numbers = [
-      userDetails.fatherMobile,
-      userDetails.motherMobile,
-      userDetails.guardianMobile,
-    ].filter(Boolean);
+      ...new Set(
+        [
+          userDetails.fatherMobile,
+          userDetails.motherMobile,
+          userDetails.guardianMobile,
+        ].filter(Boolean)
+      ),
+    ];
 
     // Live-tracking link the contacts open — the room is the user's bare digits,
     // which is exactly what the frontend uses as the socket room name.
