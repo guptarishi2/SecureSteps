@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import videoFile from './vid1.mp4';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/authcontext';
+import { API_BASE } from '../config';
 
 function VideoPlayer() {
     return (
@@ -46,7 +47,7 @@ export default function Detail() {
         try {
             if (checkbox) {
                 const response = await fetch(
-                  `${process.env.REACT_APP_BACKEND_URL}/user/user-detail`,
+                  `${API_BASE}/user/user-detail`,
                   {
                     method: "POST",
                     headers: {
@@ -74,14 +75,15 @@ export default function Detail() {
                     });
                     navigate("/Share-Location")
                 } else {
-                    alert('Error submitting form.');
-                    
+                    const data = await response.json().catch(() => ({}));
+                    alert(data.message || `Error submitting form (${response.status}).`);
                 }
             } else {
                 alert("Please agree to the terms and conditions by checking the checkbox.");
             }
         } catch (err) {
-            alert('Submission failed. Please try again.');
+            console.error("Detail submit error:", err);
+            alert(`Could not reach the server. ${err.message}`);
         }
     };
 

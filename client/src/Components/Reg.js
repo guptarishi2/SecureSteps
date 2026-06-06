@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import videoFile from './vid1.mp4';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/authcontext';
+import { API_BASE } from '../config';
 function VideoPlayer() {
   return (
     <video width="600" loop autoPlay muted>
@@ -20,31 +21,32 @@ const navigate = useNavigate()
   const HandleSubmit = async (e) => {
     e.preventDefault();  // Prevent the default form submission behavior
     try {
-      if (checkbox) {
-        const resp = await fetch(
-          `${process.env.REACT_APP_BACKEND_URL}/user/user-register`,
-          {
-            method: "POST",
-            body: JSON.stringify({ name, mobilenumber: phone, age }),
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        );
-
-        const data = await resp.json();
-        if (resp.ok) {
-          alert("User registration successful");
-          login({ name, phone }, data.token);
-          navigate("/Details");
-        } else {
-          alert(data.message || "Registration failed");
-        }
-      } else {
+      if (!checkbox) {
         alert("Please agree to the terms and conditions");
+        return;
+      }
+
+      const resp = await fetch(`${API_BASE}/user/user-register`, {
+        method: "POST",
+        body: JSON.stringify({ name, mobilenumber: phone, age }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await resp.json().catch(() => ({}));
+      if (resp.ok) {
+        alert("User registration successful");
+        login({ name, phone }, data.token);
+        navigate("/Details");
+      } else if (Array.isArray(data.errors) && data.errors.length) {
+        alert(data.errors.map((er) => er.msg).join("\n"));
+      } else {
+        alert(data.message || `Registration failed (${resp.status})`);
       }
     } catch (e) {
-      alert("Error occurred");
+      console.error("Registration error:", e);
+      alert(`Could not reach the server. ${e.message}`);
     }
   };
 

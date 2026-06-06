@@ -20,7 +20,7 @@ USerRouter.post(
     }
 
     try {
-      const { name, mobilenumber } = req.body;
+      const { name, mobilenumber, age } = req.body;
       const phone = formatPhone(mobilenumber);
 
       const existing = await UserModel.findOne({ mobilenumber: phone });
@@ -28,7 +28,11 @@ USerRouter.post(
         return res.status(409).json({ message: "User already exists, please login" });
       }
 
-      const newUser = await UserModel.create({ name, mobilenumber: phone });
+      const newUser = await UserModel.create({
+        name,
+        mobilenumber: phone,
+        age: age ? Number(age) : undefined,
+      });
 
       const token = jwt.sign(
         { user: { id: newUser._id, name: newUser.name, mobilenumber: newUser.mobilenumber } },

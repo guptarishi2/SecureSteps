@@ -1,9 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/authcontext';
-
-const SOCKET_URL =
-  process.env.REACT_APP_SOCKET_URL || process.env.REACT_APP_BACKEND_URL || "http://localhost:1042";
+import { API_BASE, SOCKET_URL } from '../config';
 
 export default function Loc() {
   const socket = useMemo(() => io(SOCKET_URL), []); // Initialize socket connection
@@ -58,7 +56,7 @@ export default function Loc() {
     if (userPhone) {
       try {
         const resp = await fetch(
-          `${process.env.REACT_APP_BACKEND_URL}/user/post-location`,
+          `${API_BASE}/user/post-location`,
           {
             method: "POST",
             body: JSON.stringify({ userPhone }), // Send userPhone in request body

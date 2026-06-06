@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import videoFile from './vid1.mp4';
 import { useAuth } from "../context/authcontext";
+import { API_BASE } from "../config";
 
 // Video player component
 function VideoPlayer() {
@@ -24,27 +25,25 @@ export default function Log() {
   const HandleSubmit = async (e) => {
     e.preventDefault();  // Prevent the default form submission behavior
     try {
-      const resp = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/user/user-login`,
-        {
-          method: "POST",
-          body: JSON.stringify({ name, mobilenumber: phone }),
-          headers: {
-            "Content-Type": "application/json",
-          },
+      const resp = await fetch(`${API_BASE}/user/user-login`, {
+        method: "POST",
+        body: JSON.stringify({ name, mobilenumber: phone }),
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+      });
 
-      const data = await resp.json();
+      const data = await resp.json().catch(() => ({}));
       if (resp.ok) {
         alert("User login successful");
         login({ name, phone }, data.token);  // store user + JWT
         navigate("/Details");  // Redirect to the details page
       } else {
-        alert(data.message || "Login failed");
+        alert(data.message || `Login failed (${resp.status})`);
       }
     } catch (e) {
-      alert("Error occurred during login");
+      console.error("Login error:", e);
+      alert(`Could not reach the server. ${e.message}`);
     }
   };
 

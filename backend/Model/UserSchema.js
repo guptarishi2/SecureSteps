@@ -8,6 +8,9 @@ const UserSchema = mongoose.Schema({
         type:String,
         required:true,
         unique:true,
+    },
+    age:{
+        type:Number,
     }
 })
 const UserModel = mongoose.model("user", UserSchema )
