@@ -11,7 +11,7 @@ export default function Nav() {
         <div className="logo1"></div>
         <div className="button1">
           <Link className="btn2" to="/Register">Register</Link>
-          <Link className="btn2" to="/Log in">Log in</Link>
+          <Link className="btn2" to="/Log-in">Log in</Link>
         </div>
       </nav>
     </div>

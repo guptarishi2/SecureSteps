@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Form } from 'react-router-dom';
 import videoFile from './vid1.mp4';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/authcontext';
@@ -22,21 +21,24 @@ const navigate = useNavigate()
     e.preventDefault();  // Prevent the default form submission behavior
     try {
       if (checkbox) {
-        const resp = await fetch("http://localhost:1042/user/user-register", {
-          method: "POST",
-          credentials: "include",
-          body: JSON.stringify({ name, mobilenumber: phone, age }),
-          headers: {
-            "Content-Type": "application/json",  // Corrected headers
+        const resp = await fetch(
+          `${process.env.REACT_APP_BACKEND_URL}/user/user-register`,
+          {
+            method: "POST",
+            body: JSON.stringify({ name, mobilenumber: phone, age }),
+            headers: {
+              "Content-Type": "application/json",
+            },
           },
-        });
+        );
 
+        const data = await resp.json();
         if (resp.ok) {
           alert("User registration successful");
-          login({name , phone})
-          navigate("/details")
+          login({ name, phone }, data.token);
+          navigate("/Details");
         } else {
-          alert("Server Error");
+          alert(data.message || "Registration failed");
         }
       } else {
         alert("Please agree to the terms and conditions");

@@ -2,15 +2,16 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/authcontext';
 
+const SOCKET_URL =
+  process.env.REACT_APP_SOCKET_URL || process.env.REACT_APP_BACKEND_URL || "http://localhost:1042";
+
 export default function Loc() {
-  const socket = useMemo(() => io("http://localhost:1890"), []); // Initialize socket connection
-  const [latitude, setLatitude] = useState(0); // State for latitude
-  const [longitude, setLongitude] = useState(0); // State for longitude
+  const socket = useMemo(() => io(SOCKET_URL), []); // Initialize socket connection
   const [loading, setLoading] = useState(false); // Loading state
-  const { user } = useAuth(); // Get the authenticated user from context
+  const { user, token } = useAuth(); // Get the authenticated user + JWT from context
 
   // Extract the user's phone number safely
-  const userPhone = user?.username?.phone;
+  const userPhone = user?.phone;
   console.log("User's phone:", userPhone);
 
   useEffect(() => {
@@ -22,8 +23,6 @@ export default function Loc() {
         (position) => {
           const { longitude, latitude } = position.coords;
           console.log("Location received:", latitude, longitude);
-          setLatitude(latitude);
-          setLongitude(longitude);
 
           if (userPhone) {
             // Send the location to the server via socket
@@ -58,22 +57,26 @@ export default function Loc() {
   
     if (userPhone) {
       try {
-        const resp = await fetch("http://localhost:1042/user/post-location", {
-          method: "POST",
-          body: JSON.stringify({ userPhone }),  // Send userPhone in request body
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
+        const resp = await fetch(
+          `${process.env.REACT_APP_BACKEND_URL}/user/post-location`,
+          {
+            method: "POST",
+            body: JSON.stringify({ userPhone }), // Send userPhone in request body
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token ? `Bearer ${token}` : "",
+            },
           },
-        });
-  
+        );
+
+        const data = await resp.json().catch(() => ({}));
         if (resp.ok) {
           socket.emit("join-room", { room: userPhone });
           console.log("Joined room:", userPhone);
-          alert("Location is being shared!");
+          alert("Location is being shared with your emergency contacts!");
         } else {
           console.log("Failed to post location.");
-          alert("Error sharing location. Please try again.");
+          alert(data.message || "Error sharing location. Please try again.");
         }
       } catch (error) {
         console.error("Error posting location:", error);

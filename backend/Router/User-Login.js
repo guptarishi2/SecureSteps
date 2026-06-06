@@ -1,22 +1,31 @@
-// require("dotenv").config();
 const Router = require("express");
 const UserModel = require("../Model/UserSchema");
+const jwt = require("jsonwebtoken");
+const { formatPhone } = require("../utils/phone");
+
 const LoginRouter = Router();
-const jwt = require("jsonwebtoken")
-LoginRouter.post("/user-login" , async(req , res)=>{
-    const {name , mobilenumber} = req.body;
-    const newUser = await UserModel.findOne({mobilenumber:`+91${mobilenumber}`});
-    if(!newUser){
-        return res.status(404).json("please Register First")
+
+LoginRouter.post("/user-login", async (req, res) => {
+  try {
+    const { mobilenumber } = req.body;
+    const phone = formatPhone(mobilenumber);
+
+    const user = await UserModel.findOne({ mobilenumber: phone });
+    if (!user) {
+      return res.status(404).json({ message: "Please register first" });
     }
-    res.clearCookie("token", process.env.JWT_SECRET, { path: "/", domain: "localhost", httplOnly: true, signed: true })
-    const expires = new Date()
-    expires.setDate(expires.getDate() + 7)
-    const payload = {newUser};
-    const token = jwt.sign({payload} , process.env.JWT_SECRET)
-    res.cookie("token", token, process.env.JWT_SECRET, { path: "/", domain: "localhost", httplOnly: false, signed: true, expires })
-    console.log(req.cookies.token);
-    
-    res.status(200).json(newUser)
-})
-module.exports = LoginRouter
+
+    const token = jwt.sign(
+      { user: { id: user._id, name: user.name, mobilenumber: user.mobilenumber } },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return res.status(200).json({ user, token });
+  } catch (e) {
+    console.error("Login error:", e.message);
+    return res.status(500).json({ message: "Server error during login" });
+  }
+});
+
+module.exports = LoginRouter;

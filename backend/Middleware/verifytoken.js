@@ -1,20 +1,26 @@
-// require("dotenv").config();
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
+
+// Reads the JWT from the Authorization header ("Bearer <token>") first, and
+// falls back to a cookie. Header-based auth works reliably across separate
+// frontend/backend domains where third-party cookies are often blocked.
 const verifytoken = (req, res, next) => {
-    const token = req.cookies.token
-    console.log(token);
-    try {
-        if (!token) return res.status(400).json({ msg: "Not found" })
-        jwt.verify(token, process.env.JWT_SECRET, async (err, payload) => {
-          if (err) return res.status(401).json({ msg: "token is not valid" });
-          req.userid = payload;
-          console.log(payload);
+  let token;
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.slice(7);
+  } else if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+  }
 
-          next();
-        });
-    }
-    catch (e) {
+  if (!token) {
+    return res.status(401).json({ msg: "Authentication required" });
+  }
 
-    }
-}
-module.exports = verifytoken
+  jwt.verify(token, process.env.JWT_SECRET, (err, payload) => {
+    if (err) return res.status(401).json({ msg: "Token is not valid" });
+    req.userid = payload;
+    next();
+  });
+};
+
+module.exports = verifytoken;

@@ -24,21 +24,24 @@ export default function Log() {
   const HandleSubmit = async (e) => {
     e.preventDefault();  // Prevent the default form submission behavior
     try {
-      const resp = await fetch("http://localhost:1042/user/user-login", {
-        method: "POST",
-        credentials: "include",
-        body: JSON.stringify({ name, mobilenumber: phone }),
-        headers: {
-          "Content-Type": "application/json",  // Set the content type
+      const resp = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/user/user-login`,
+        {
+          method: "POST",
+          body: JSON.stringify({ name, mobilenumber: phone }),
+          headers: {
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
+      const data = await resp.json();
       if (resp.ok) {
         alert("User login successful");
-        login({ name, phone });  // Call login to set user context
-        navigate("/details");  // Redirect to the details page
+        login({ name, phone }, data.token);  // store user + JWT
+        navigate("/Details");  // Redirect to the details page
       } else {
-        alert("Server Error");
+        alert(data.message || "Login failed");
       }
     } catch (e) {
       alert("Error occurred during login");

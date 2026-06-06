@@ -12,7 +12,7 @@ export default function Home(props) {
             <div>Started</div>
             <div className="button">
               <Link className="btn1" to="/Register">Register</Link>
-              <Link className="btn1" to="/Log in">Log in</Link>
+              <Link className="btn1" to="/Log-in">Log in</Link>
             </div>
           </article>
         </aside>
@@ -20,4 +20,3 @@ export default function Home(props) {
     </div>
   );
 }
-

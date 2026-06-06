@@ -1,9 +1,7 @@
-import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import Reg from './Components/Reg'
-import Nav from './Components/Nav';
 import Det from './Components/Detail';
 import Log from './Components/Log';
 import Loc from './Components/Loc';
@@ -17,8 +15,6 @@ import { createRoot } from "react-dom/client";
 import {
   createBrowserRouter,
   RouterProvider,
-  Route,
-  Link,
 } from "react-router-dom";
 import Location from './Components/Map';
 import { AuthProvider } from './context/authcontext';

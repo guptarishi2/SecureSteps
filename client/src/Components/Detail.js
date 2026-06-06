@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import videoFile from './vid1.mp4';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/authcontext';
 
 function VideoPlayer() {
     return (
@@ -12,9 +13,10 @@ function VideoPlayer() {
 
 export default function Detail() {
     const navigate = useNavigate()
+    const { user } = useAuth();
     const [formData, setFormData] = useState({
-        name: '',
-        mobileNumber: '',
+        name: user?.name || '',
+        mobileNumber: user?.phone || '',
         fatherName: '',
         motherName: '',
         fatherMobile: '',
@@ -43,13 +45,16 @@ export default function Detail() {
         e.preventDefault();
         try {
             if (checkbox) {
-                const response = await fetch('http://localhost:1042/user/user-detail', {
-                    method: 'POST',
+                const response = await fetch(
+                  `${process.env.REACT_APP_BACKEND_URL}/user/user-detail`,
+                  {
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json',
+                      "Content-Type": "application/json",
                     },
                     body: JSON.stringify(formData),
-                });
+                  },
+                );
                 if (response.ok) {
                     alert('User registration successful!');
                     // Reset form fields after successful submission

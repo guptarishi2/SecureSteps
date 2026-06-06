@@ -5,9 +5,12 @@ import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import "leaflet/dist/leaflet.css";
 import "../App.css"; // Assuming you have CSS for the map container
 
+const SOCKET_URL =
+  process.env.REACT_APP_SOCKET_URL || process.env.REACT_APP_BACKEND_URL || "http://localhost:1042";
+
 const Location = () => {
   const { id } = useParams(); // Extract id from URL params
-  const socket = useMemo(() => io("http://localhost:1890"), []); // Initialize socket connection
+  const socket = useMemo(() => io(SOCKET_URL), []); // Initialize socket connection
   const [latitude, setLatitude] = useState(0); // Latitude state
   const [longitude, setLongitude] = useState(0); // Longitude state
 
