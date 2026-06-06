@@ -6,6 +6,7 @@ import { API_BASE, SOCKET_URL } from '../config';
 export default function Loc() {
   const socket = useMemo(() => io(SOCKET_URL), []); // Initialize socket connection
   const [loading, setLoading] = useState(false); // Loading state
+  const [trackingLink, setTrackingLink] = useState(""); // Live-tracking link to share manually
   const { user, token } = useAuth(); // Get the authenticated user + JWT from context
 
   // Extract the user's phone number safely
@@ -68,17 +69,28 @@ export default function Loc() {
         );
 
         const data = await resp.json().catch(() => ({}));
+        // Join the socket room whenever the server returns one, so live
+        // location works even if the SMS/call could not be delivered.
+        if (data.room) {
+          socket.emit("join-room", { room: data.room });
+          console.log("Joined room:", data.room);
+        }
+        if (data.trackingLink) {
+          setTrackingLink(data.trackingLink);
+        }
+
         if (resp.ok) {
-          socket.emit("join-room", { room: userPhone });
-          console.log("Joined room:", userPhone);
           alert("Location is being shared with your emergency contacts!");
         } else {
-          console.log("Failed to post location.");
-          alert(data.message || "Error sharing location. Please try again.");
+          console.warn("post-location:", data);
+          alert(
+            data.message ||
+              `Error sharing location (${resp.status}). Please try again.`
+          );
         }
       } catch (error) {
         console.error("Error posting location:", error);
-        alert("An error occurred while sharing location. Please try again.");
+        alert(`Could not reach the server. ${error.message}`);
       }
     } else {
       console.log("User phone number not available.");
@@ -113,6 +125,15 @@ export default function Loc() {
               <button className="btn4 btn3" onClick={setLocation} disabled={loading}>
                 {loading ? "Sharing..." : "Share Location"}
               </button>
+              {trackingLink && (
+                <div className="font1" style={{ marginTop: 16, wordBreak: "break-all" }}>
+                  Live tracking link (share with your contacts):
+                  <br />
+                  <a href={trackingLink} target="_blank" rel="noreferrer" style={{ color: "#fff" }}>
+                    {trackingLink}
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         </div>
