@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/authcontext';
 import { API_BASE, SOCKET_URL } from '../config';
@@ -8,6 +8,7 @@ export default function Loc() {
   const [loading, setLoading] = useState(false); // Loading state
   const [trackingLink, setTrackingLink] = useState(""); // Live-tracking link to share manually
   const { user, token } = useAuth(); // Get the authenticated user + JWT from context
+  const lastPosRef = useRef(null); // Most recent {latitude, longitude}
 
   // Extract the user's phone number safely
   const userPhone = user?.phone;
@@ -16,17 +17,19 @@ export default function Loc() {
   useEffect(() => {
     let geoWatchId;
 
+    const emitLocation = () => {
+      if (userPhone && lastPosRef.current) {
+        socket.emit("send-location", { ...lastPosRef.current, roomname: userPhone });
+      }
+    };
+
     if (navigator.geolocation) {
       // Watch the user's position in real-time
       geoWatchId = navigator.geolocation.watchPosition(
         (position) => {
           const { longitude, latitude } = position.coords;
-          console.log("Location received:", latitude, longitude);
-
-          if (userPhone) {
-            // Send the location to the server via socket
-            socket.emit("send-location", { latitude, longitude, roomname: userPhone });
-          }
+          lastPosRef.current = { latitude, longitude };
+          emitLocation();
         },
         (error) => {
           console.error("Geolocation error:", error);
@@ -40,11 +43,16 @@ export default function Loc() {
       alert("Geolocation is not supported by your browser.");
     }
 
+    // Re-emit the last known position periodically so a viewer who opens the
+    // tracking link later still receives it even when the sender is stationary.
+    const interval = setInterval(emitLocation, 3000);
+
     // Cleanup on component unmount
     return () => {
       if (geoWatchId) {
         navigator.geolocation.clearWatch(geoWatchId); // Clear geolocation watcher
       }
+      clearInterval(interval);
       socket.disconnect(); // Disconnect the socket
     };
   }, [socket, userPhone]);

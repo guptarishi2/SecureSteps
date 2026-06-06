@@ -1,54 +1,79 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
-import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import "leaflet/dist/leaflet.css";
-import "../App.css"; // Assuming you have CSS for the map container
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import "../App.css";
 import { SOCKET_URL } from "../config";
 
-const Location = () => {
-  const { id } = useParams(); // Extract id from URL params
-  const socket = useMemo(() => io(SOCKET_URL), []); // Initialize socket connection
-  const [latitude, setLatitude] = useState(0); // Latitude state
-  const [longitude, setLongitude] = useState(0); // Longitude state
+// Fix the default marker icon, whose image paths break under CRA/webpack
+// (otherwise the marker is invisible).
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
-  console.log("Room:", id); // For debugging
+const DEFAULT_CENTER = [20.5937, 78.9629]; // India, shown until the first fix
+
+// Keeps the map centered on the latest position. MapContainer's `center` prop
+// is only applied on mount, so we move the view imperatively on updates.
+function Recenter({ position }) {
+  const map = useMap();
+  useEffect(() => {
+    if (position) map.setView(position, map.getZoom());
+  }, [position, map]);
+  return null;
+}
+
+const Location = () => {
+  const { id } = useParams(); // room id from the URL (the user's digits)
+  const socket = useMemo(() => io(SOCKET_URL), []);
+  const [position, setPosition] = useState(null); // [lat, lng] or null until first update
 
   useEffect(() => {
-    // Emit event to join the id on socket connection
-    socket.emit("join-room", { room:id });
-    console.log("Joined id:", id);
+    const join = () => socket.emit("join-room", { room: id });
+    join();
+    socket.on("connect", join); // re-join if the socket reconnects
 
-    // Listen for location updates from the server
-    socket.on("receive-location", (data) => {
-      const { latitude, longitude } = data;
-      console.log("Location received:", latitude, longitude);
-      setLatitude(latitude);
-      setLongitude(longitude);
+    socket.on("receive-location", ({ latitude, longitude }) => {
+      if (typeof latitude === "number" && typeof longitude === "number") {
+        setPosition([latitude, longitude]);
+      }
     });
 
-    // Cleanup function to remove event listener and disconnect socket on unmount
     return () => {
-      socket.off("receive-location"); // Remove location listener
-      socket.disconnect(); // Disconnect the socket when the component unmounts
+      socket.off("connect", join);
+      socket.off("receive-location");
+      socket.disconnect();
     };
-  }, [socket , id]); // Dependencies: socket and id
+  }, [socket, id]);
 
   return (
     <div>
       <h1>Real-time Location Tracker</h1>
+      {position ? (
+        <p>Latitude: {position[0]} &nbsp; Longitude: {position[1]}</p>
+      ) : (
+        <p>Waiting for live location… (keep this page open)</p>
+      )}
 
-      {/* Display the current latitude and longitude */}
-      <p>Longitude: {longitude}</p>
-      <p>Latitude: {latitude}</p>
-
-      {/* Render the map with a marker at the current location */}
-      <MapContainer center={[latitude, longitude]} zoom={19} className="map">
+      <MapContainer center={position || DEFAULT_CENTER} zoom={position ? 18 : 5} className="map">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <Marker position={[latitude, longitude]} />
+        {position && (
+          <Marker position={position}>
+            <Popup>Current location</Popup>
+          </Marker>
+        )}
+        <Recenter position={position} />
       </MapContainer>
     </div>
   );
