@@ -18,12 +18,17 @@ export default function Log() {
   const { login } = useAuth(); // Get login function from context
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
   // Form submission handler
   const HandleSubmit = async (e) => {
     e.preventDefault();  // Prevent the default form submission behavior
+    if (loading) return; // ignore extra clicks while a request is in flight
+    // Show progress: the backend (Render free tier) can take ~50s to wake from
+    // sleep, during which the button must not look dead.
+    setLoading(true);
     try {
       const resp = await fetch(`${API_BASE}/user/user-login`, {
         method: "POST",
@@ -73,6 +78,8 @@ export default function Log() {
     } catch (e) {
       console.error("Login error:", e);
       alert(`Could not reach the server. ${e.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -106,8 +113,8 @@ export default function Log() {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <button className="formsub1" type="submit">
-                Submit
+              <button className="formsub1" type="submit" disabled={loading}>
+                {loading ? "Logging in…" : "Submit"}
               </button>
             </form>
           </div>

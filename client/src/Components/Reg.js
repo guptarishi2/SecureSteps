@@ -19,23 +19,28 @@ export default function Reg() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [age, setAge] = useState("");
   const [checkbox, setCheckbox] = useState(false);
+  const [loading, setLoading] = useState(false);
 const navigate = useNavigate()
   const HandleSubmit = async (e) => {
     e.preventDefault();  // Prevent the default form submission behavior
-    try {
-      if (!checkbox) {
-        alert("Please agree to the terms and conditions");
-        return;
-      }
-      if (password.length < 6) {
-        alert("Password must be at least 6 characters");
-        return;
-      }
-      if (password !== confirmPassword) {
-        alert("Passwords do not match");
-        return;
-      }
+    if (loading) return; // ignore extra clicks while a request is in flight
+    if (!checkbox) {
+      alert("Please agree to the terms and conditions");
+      return;
+    }
+    if (password.length < 6) {
+      alert("Password must be at least 6 characters");
+      return;
+    }
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
 
+    // Show progress: the backend (Render free tier) can take ~50s to wake from
+    // sleep, during which the button must not look dead.
+    setLoading(true);
+    try {
       const resp = await fetch(`${API_BASE}/user/user-register`, {
         method: "POST",
         body: JSON.stringify({ name, mobilenumber: phone, password, age }),
@@ -58,6 +63,8 @@ const navigate = useNavigate()
     } catch (e) {
       console.error("Registration error:", e);
       alert(`Could not reach the server. ${e.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -134,8 +141,8 @@ const navigate = useNavigate()
                 </div>
               </div>
 
-              <button className="formsub" type="submit">
-                Create Account
+              <button className="formsub" type="submit" disabled={loading}>
+                {loading ? "Creating account…" : "Create Account"}
               </button>
             </form>
           </div>
