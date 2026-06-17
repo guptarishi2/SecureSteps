@@ -2,6 +2,7 @@ const Router = require("express");
 const UserModel = require("../Model/UserSchema");
 const { body, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const { formatPhone } = require("../utils/phone");
 
 const USerRouter = Router();
@@ -12,6 +13,8 @@ USerRouter.post(
     body("name").isLength({ min: 4 }).withMessage("username must be of minimum length 4"),
     body("mobilenumber").isLength({ min: 10, max: 10 }).withMessage("enter a valid 10 digit number"),
     body("mobilenumber").isNumeric().withMessage("mobilenumber only contains numeric value"),
+    body("password").isString().withMessage("password must be text"),
+    body("password").isLength({ min: 6 }).withMessage("password must be at least 6 characters"),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -20,7 +23,7 @@ USerRouter.post(
     }
 
     try {
-      const { name, mobilenumber, age } = req.body;
+      const { name, mobilenumber, password, age } = req.body;
       const phone = formatPhone(mobilenumber);
 
       const existing = await UserModel.findOne({ mobilenumber: phone });
@@ -28,9 +31,13 @@ USerRouter.post(
         return res.status(409).json({ message: "User already exists, please login" });
       }
 
+      // Hash the password before it ever touches the database.
+      const passwordHash = await bcrypt.hash(password, 10);
+
       const newUser = await UserModel.create({
         name,
         mobilenumber: phone,
+        password: passwordHash,
         age: age ? Number(age) : undefined,
       });
 
@@ -40,7 +47,15 @@ USerRouter.post(
         { expiresIn: "7d" }
       );
 
-      return res.status(201).json({ user: newUser, token });
+      // Never return the password hash to the client.
+      const safeUser = {
+        _id: newUser._id,
+        name: newUser.name,
+        mobilenumber: newUser.mobilenumber,
+        age: newUser.age,
+      };
+
+      return res.status(201).json({ user: safeUser, token });
     } catch (e) {
       console.error("Register error:", e.message);
       return res.status(500).json({ message: "Server error during registration" });

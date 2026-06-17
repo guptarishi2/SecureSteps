@@ -12,12 +12,14 @@ const verifytoken = (req, res, next) => {
     token = req.cookies.token;
   }
 
+  // Send both `message` (what the React fetch handlers read) and `msg` (kept for
+  // backward compatibility) so the client surfaces the real reason, not a fallback.
   if (!token) {
-    return res.status(401).json({ msg: "Authentication required" });
+    return res.status(401).json({ message: "Authentication required", msg: "Authentication required" });
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, payload) => {
-    if (err) return res.status(401).json({ msg: "Token is not valid" });
+    if (err) return res.status(401).json({ message: "Session expired, please log in again", msg: "Token is not valid" });
     req.userid = payload;
     next();
   });

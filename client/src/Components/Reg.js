@@ -15,6 +15,8 @@ export default function Reg() {
   const {login} = useAuth()
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [age, setAge] = useState("");
   const [checkbox, setCheckbox] = useState(false);
 const navigate = useNavigate()
@@ -25,10 +27,18 @@ const navigate = useNavigate()
         alert("Please agree to the terms and conditions");
         return;
       }
+      if (password.length < 6) {
+        alert("Password must be at least 6 characters");
+        return;
+      }
+      if (password !== confirmPassword) {
+        alert("Passwords do not match");
+        return;
+      }
 
       const resp = await fetch(`${API_BASE}/user/user-register`, {
         method: "POST",
-        body: JSON.stringify({ name, mobilenumber: phone, age }),
+        body: JSON.stringify({ name, mobilenumber: phone, password, age }),
         headers: {
           "Content-Type": "application/json",
         },
@@ -38,6 +48,7 @@ const navigate = useNavigate()
       if (resp.ok) {
         alert("User registration successful");
         login({ name, phone }, data.token);
+        // First-time user: go fill family details once.
         navigate("/Details");
       } else if (Array.isArray(data.errors) && data.errors.length) {
         alert(data.errors.map((er) => er.msg).join("\n"));
@@ -91,6 +102,24 @@ const navigate = useNavigate()
                 placeholder="Enter your age"
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
+              /><br /><br />
+              <input
+                className="age1 age"
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Create a password (min 6 characters)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              /><br /><br />
+              <input
+                className="age1 age"
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
               /><br /><br />
 
               <div className="em">

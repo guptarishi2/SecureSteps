@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import videoFile from './vid1.mp4';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/authcontext';
@@ -14,7 +14,7 @@ function VideoPlayer() {
 
 export default function Detail() {
     const navigate = useNavigate()
-    const { user } = useAuth();
+    const { user, token } = useAuth();
     const [formData, setFormData] = useState({
         name: user?.name || '',
         mobileNumber: user?.phone || '',
@@ -31,6 +31,49 @@ export default function Detail() {
     });
     const [checkbox, setCheckbox] = useState(false);
 
+    // Pre-fill the form with any details already saved, so a returning user who
+    // chooses to edit them sees their existing data instead of a blank form.
+    useEffect(() => {
+        if (!token) return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const resp = await fetch(`${API_BASE}/user/user-detail`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (!cancelled && resp.ok && data.exists && data.details) {
+                    const d = data.details;
+                    // The backend stores phone numbers in E.164 ("+91..."), but the
+                    // phone inputs are type="number", which cannot display a leading
+                    // "+" and would render blank. Strip the prefix so the bare digits
+                    // show; the POST re-normalises them via formatPhone.
+                    const bare = (v) => (v || '').replace(/^\+91/, '');
+                    setFormData((prev) => ({
+                        ...prev,
+                        name: d.name ?? prev.name,
+                        mobileNumber: bare(d.mobileNumber) || prev.mobileNumber,
+                        fatherName: d.fatherName ?? '',
+                        motherName: d.motherName ?? '',
+                        fatherMobile: bare(d.fatherMobile),
+                        motherMobile: bare(d.motherMobile),
+                        guardianName: d.guardianName ?? '',
+                        guardianMobile: bare(d.guardianMobile),
+                        address: d.address ?? '',
+                        district: d.district ?? '',
+                        state: d.state ?? '',
+                        pincode: d.pincode ?? '',
+                    }));
+                }
+            } catch (err) {
+                console.error("Prefill details error:", err);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [token]);
+
     const handleChange = (e) => {
         setFormData({
             ...formData,
@@ -45,6 +88,12 @@ export default function Detail() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            // The detail route is protected; without a token the POST would 401.
+            if (!token) {
+                alert("Your session has expired. Please log in again.");
+                navigate("/Log-in");
+                return;
+            }
             if (checkbox) {
                 const response = await fetch(
                   `${API_BASE}/user/user-detail`,
@@ -52,6 +101,7 @@ export default function Detail() {
                     method: "POST",
                     headers: {
                       "Content-Type": "application/json",
+                      Authorization: token ? `Bearer ${token}` : "",
                     },
                     body: JSON.stringify(formData),
                   },

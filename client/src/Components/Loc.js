@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { io } from 'socket.io-client';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/authcontext';
 import { API_BASE, SOCKET_URL } from '../config';
 
@@ -133,6 +134,11 @@ export default function Loc() {
               <button className="btn4 btn3" onClick={setLocation} disabled={loading}>
                 {loading ? "Sharing..." : "Share Location"}
               </button>
+              <div className="font1" style={{ marginTop: 12 }}>
+                <Link to="/Details" style={{ color: "#fff", textDecoration: "underline" }}>
+                  Update family details
+                </Link>
+              </div>
               {trackingLink && (
                 <div className="font1" style={{ marginTop: 16, wordBreak: "break-all" }}>
                   Live tracking link (share with your contacts):
