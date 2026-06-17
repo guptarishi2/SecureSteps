@@ -10,6 +10,7 @@ const USerRouter = require("./Router/User-Register");
 const USerDetailRouter = require("./Router/User-Detail");
 const LoginRouter = require("./Router/User-Login");
 const LocationRouter = require("./Router/Location-route");
+const ChatRouter = require("./Router/Chat-route");
 const registerSocket = require("./socket");
 
 const app = express();
@@ -44,6 +45,7 @@ app.use("/user", USerRouter);
 app.use("/user", USerDetailRouter);
 app.use("/user", LoginRouter);
 app.use("/user", LocationRouter);
+app.use("/user", ChatRouter);
 
 const server = http.createServer(app);
 

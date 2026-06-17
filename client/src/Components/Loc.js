@@ -134,6 +134,22 @@ export default function Loc() {
               <button className="btn4 btn3" onClick={setLocation} disabled={loading}>
                 {loading ? "Sharing..." : "Share Location"}
               </button>
+              <div style={{ marginTop: 12 }}>
+                <Link
+                  to="/Emergency-Chat"
+                  style={{
+                    display: "inline-block",
+                    background: "#5b6bf5",
+                    color: "#fff",
+                    padding: "10px 18px",
+                    borderRadius: 10,
+                    textDecoration: "none",
+                    fontWeight: 600,
+                  }}
+                >
+                  💬 Talk to Saheli
+                </Link>
+              </div>
               <div className="font1" style={{ marginTop: 12 }}>
                 <Link to="/Details" style={{ color: "#fff", textDecoration: "underline" }}>
                   Update family details
